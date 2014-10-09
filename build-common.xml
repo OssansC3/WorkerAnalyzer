@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding="utf-8" ?>
+
+<project name="commons">
+
+	<property name="ssh.server"         value="ec2-54-64-149-212.ap-northeast-1.compute.amazonaws.com" />
+	<property name="ssh.user"           value="hadoop" />
+	<property name="ssh.pass"           value="" />
+	<property name="ssh.key"            value="C:/pbl/ssh_key/c3-key.pem" />
+	<property name="build.path"         value="./build" />
+	<property name="hadoop.path"        value="C:/pbl/hadoop-1.0.3" />
+	<property name="hadoop.lib.path"    value="C:/pbl/hadoop-1.0.3/lib" />
+	<property name="hadoop.server.path" value="/home/hadoop/hadoop/bin" />
+
+</project>
