@@ -70,7 +70,7 @@ public class WorkerAnalyzer1 {
 			if(isNoisyDay(csv[PosUtils.MONTH],csv[PosUtils.DATE]))return;
 
 			//サラリーマン対象
-			if(!isEqual(csv[PosUtils.BUYER_AGE],2,3)) return;
+			if(!isEqual(csv[PosUtils.BUYER_AGE],3,4)) return;
 
 			//時間は朝か夜
 			String hour = csv[PosUtils.HOUR];
@@ -130,44 +130,54 @@ public class WorkerAnalyzer1 {
 
 			// 売り上げを合計
 			long countMorning = 0,countNight = 0,
-					countWeekStart = 0, countWeekEnd = 0;
+					countWeekStart = 0, countWeekEnd = 0,
+					countSutStart = 0, countSutEnd = 0,
+					countSunStart = 0, countSunEnd = 0;
 			for (Text value : values) {
 				String list[] = value.toString().split(",");
 				long count = Long.valueOf(list[COUNT]);
 				if(list[TIME].equals("0")){
 					countMorning += count;
 					if(list[WEEK].equals("1")) countWeekStart += count;
+					if(list[WEEK].equals("6")) countSutStart += count;
+					if(list[WEEK].equals("7")) countSunStart += count;
 				} else {
 					countNight += count;
 					if(list[WEEK].equals("5")) countWeekEnd += count;
+					if(list[WEEK].equals("6")) countSutEnd += count;
+					if(list[WEEK].equals("7")) countSunEnd += count;
 				}
 			}
 
+			if((countMorning<10000)&&(countNight<10000)) return;
+
 			// emit
-			context.write(new Text(key),new Text(format(countMorning,countNight,countWeekStart,countWeekEnd)));
+			context.write(new Text(key),new Text(format(countMorning,countNight,countWeekStart,countWeekEnd,
+					countSutStart,countSutEnd,countSunStart,countSunEnd)));
 		}
 
-		private static String format(long m,long n,long s,long e){
+		private static String format(long m,long n,long s,long e,long s6,long e6,long s7,long e7){
 			long mAvg = m/LENGTH, nAvg = n/LENGTH;
-			String ss = "週初",es = "週末";
+			String ss = PorM("週初",s,mAvg);
+			String es = PorM("週末",e,nAvg);
+			String s6s = PorM("土初",s6,mAvg);
+			String e6s = PorM("土終",e6,nAvg);
+			String s7s = PorM("日初",s7,mAvg);
+			String e7s = PorM("日終",e7,nAvg);
 
-			if(s >= mAvg*2) ss += "+++";
-			else if(s >= mAvg*1.6) ss += "++ ";
-			else if(s >= mAvg*1.3) ss += "+  ";
-			else if(s <= mAvg/2) ss += "---";
-			else if(s <= mAvg/1.6) ss += "-- ";
-			else if(s <= mAvg/1.3) ss += "-  ";
-			else ss += "   ";
+			return ss+"\t"+es+"\t"+s6s+"\t"+e6s+"\t"+s7s+"\t"+e7s+"\n-----\t"
+				+s+"\t"+s6+"\t"+s7+"\t"+mAvg+"\t"+m+"\t"
+				+e+"\t"+e6+"\t"+e7+"\t"+nAvg+"\t"+n;
+		}
 
-			if(e >= nAvg*2) es += "+++";
-			else if(e >= nAvg*1.6) es += "++ ";
-			else if(e >= nAvg*1.3) es += "+  ";
-			else if(e <= nAvg/2) es += "---";
-			else if(e <= nAvg/1.6) es += "-- ";
-			else if(e <= nAvg/1.3) es += "-  ";
-			else es += "   ";
-
-			return ss+"\t"+es+"\t"+s+"\t"+mAvg+"\t"+m+"\t"+e+"\t"+nAvg+"\t"+n;
+		private static String PorM(String str,long n,long avg){
+			if(n >= avg*2) return str+"+++";
+			else if(n >= avg*1.6) return str+"++ ";
+			else if(n >= avg*1.3) return str+"+  ";
+			else if(n <= avg/2) return str+"---";
+			else if(n <= avg/1.6) return str+"-- ";
+			else if(n <= avg/1.3) return str+"-  ";
+			else return str+"   ";
 		}
 	}
 
